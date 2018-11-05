@@ -8,19 +8,18 @@ import com.wolf.parser.RowColumn;
 import com.wolf.parser.Schema;
 import com.wolf.utils.Logger;
 import java.io.File;
+import java.io.FileInputStream;
+import java.io.FileNotFoundException;
 import java.io.FileOutputStream;
-import java.io.FileWriter;
 import java.io.IOException;
 import java.io.InputStream;
 import java.io.OutputStream;
-import java.io.Writer;
-import java.util.Arrays;
 import java.util.Collection;
 import java.util.Comparator;
 import java.util.List;
+import java.util.function.Predicate;
 import java.util.stream.Collectors;
 import lombok.AllArgsConstructor;
-import lombok.Data;
 
 /**
  * Created by slj on 2018-11-03
@@ -58,13 +57,12 @@ public class FileStoreEngine implements StoreEngine{
                 .map(RowColumn::getData).collect(Collectors.toList());
             try {
                 outputStream.write(new Data(rowDatas).getBytes());
-                outputStream.write("\n".getBytes());
-                outputStream.flush();
             } catch (IOException e) {
                 logger.log(e.getMessage());
                 throw new StoreException(e);
             }finally {
                 try {
+                    outputStream.flush();
                     outputStream.close();
                 } catch (IOException e) {
                     logger.log(e.getMessage());
@@ -73,8 +71,57 @@ public class FileStoreEngine implements StoreEngine{
             }
         });
 
-        return 0;
+        return datas.size();
     }
+
+    @Override public List<Row> queryAll(String tableName) throws IOException {
+        File file = new File(dataDir+tableName+tableSubffix);
+        FileInputStream inputStream;
+        try {
+             inputStream= new FileInputStream(file);
+        } catch (FileNotFoundException e) {
+            e.printStackTrace();
+            throw new StoreException("table file noe exists");
+        }
+        List<Row> rows = Lists.newArrayList();
+        int dataLength = inputStream.read();
+        while (dataLength!=-1){
+            byte[] splits =  new byte[dataLength];
+            inputStream.read(splits);
+
+            List<List<Byte>> tempDatas =Bytes.asList(splits).stream()
+                .map(e-> {
+                    byte[] temp =new byte[e];
+                    try {
+                        inputStream.read(temp);
+                    } catch (IOException e1) {
+                        throw new StoreException(e1);
+                    }
+                    return Bytes.asList(temp);
+                }).collect(Collectors.toList());
+            rows.add(transform(tempDatas));
+            dataLength = inputStream.read();
+        }
+
+        return rows;
+    }
+
+
+    private Row transform(List<List<Byte>> rowData){
+        List<RowColumn> rowColumns = Lists.newArrayList();
+        for (int i = 0; i < rowData.size(); i++) {
+            List<Byte> valueBytes = rowData.get(i);
+           rowColumns.add(new RowColumn(i,i,new String(Bytes.toArray(valueBytes))));
+        }
+        return new Row(rowColumns);
+    }
+
+    @Override public List<Row> queryByConditions(List<Predicate> predicates) {
+        return null;
+    }
+
+
+
 
     @lombok.Data
     public static class Data{

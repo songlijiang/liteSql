@@ -17,6 +17,7 @@ import org.junit.Test;
  */
 public class FileStoreEngineTest {
 
+    Logger logger= new Logger(this.getClass().getName());
 
     @Test
     public void testContent(){
@@ -29,9 +30,16 @@ public class FileStoreEngineTest {
 
     @Test
     public void testWrite()throws Exception{
-        List<String> contents = Lists.newArrayList("first","second","third","forth");
+        List<String> contents = Lists.newArrayList("asasa","first","second","third","forth");
         List<RowColumn> rowColumns = contents.stream().map(e->new RowColumn(1,1,e)).collect(Collectors.toList());
         StoreEngine storeEngine = new FileStoreEngine();
         storeEngine.insert(Lists.newArrayList(new Row(rowColumns)),"user",Lists.newArrayList());
+    }
+
+    @Test
+    public void testqueryAll()throws Exception{
+        StoreEngine storeEngine = new FileStoreEngine();
+        List<Row> rows = storeEngine.queryAll("user");
+        rows.forEach(e->logger.log(e.toString()));
     }
 }
