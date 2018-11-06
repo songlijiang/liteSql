@@ -18,4 +18,6 @@ doc/**/*.tex
 doc/**/*.pdf
 node_modules
 .ensime**
+piaoniu-op/src/main/resources/static
 .meghanada
+
