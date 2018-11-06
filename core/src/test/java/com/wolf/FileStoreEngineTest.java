@@ -2,12 +2,13 @@ package com.wolf;
 
 import com.google.common.collect.Lists;
 import com.google.common.primitives.Bytes;
-import com.google.common.primitives.Chars;
 import com.wolf.parser.Row;
 import com.wolf.parser.RowColumn;
 import com.wolf.store.FileStoreEngine;
 import com.wolf.store.StoreEngine;
 import com.wolf.utils.Logger;
+import java.io.IOException;
+import java.io.RandomAccessFile;
 import java.util.List;
 import java.util.stream.Collectors;
 import org.junit.Test;
@@ -41,5 +42,17 @@ public class FileStoreEngineTest {
         StoreEngine storeEngine = new FileStoreEngine();
         List<Row> rows = storeEngine.queryAll("user");
         rows.forEach(e->logger.log(e.toString()));
+    }
+
+    @Test
+    public void test_randomAccessFile() throws IOException {
+        RandomAccessFile randomAccessFile = new RandomAccessFile("/Users/lijiang.song/data/raf.a","rw");
+        //randomAccessFile.seek(0);
+        randomAccessFile.writeUTF("helloworld");
+        randomAccessFile.writeUTF("1");
+
+        //randomAccessFile.setLength(1024);
+        long pointer = randomAccessFile.getFilePointer();
+        logger.log(""+pointer);
     }
 }
