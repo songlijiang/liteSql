@@ -15,4 +15,7 @@ public class Logger {
     public void log(String message){
         System.out.println(preFix+" "+message);
     }
+    public void log(Object o){
+        System.out.println(preFix+" "+o==null?"null":o);
+    }
 }

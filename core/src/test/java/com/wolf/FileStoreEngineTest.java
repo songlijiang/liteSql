@@ -6,9 +6,12 @@ import com.wolf.parser.Row;
 import com.wolf.parser.RowColumn;
 import com.wolf.store.FileStoreEngine;
 import com.wolf.store.StoreEngine;
+import com.wolf.store.index.ArrayIndex;
+import com.wolf.store.index.VarcharIndexKey;
 import com.wolf.utils.Logger;
 import java.io.IOException;
 import java.io.RandomAccessFile;
+import java.util.Arrays;
 import java.util.List;
 import java.util.stream.Collectors;
 import org.junit.Test;
@@ -31,7 +34,7 @@ public class FileStoreEngineTest {
 
     @Test
     public void testWrite()throws Exception{
-        List<String> contents = Lists.newArrayList("asasa","first","second","third","forth");
+        List<String> contents = Lists.newArrayList("w","l","f","1","2","3");
         List<RowColumn> rowColumns = contents.stream().map(e->new RowColumn(1,1,e)).collect(Collectors.toList());
         StoreEngine storeEngine = new FileStoreEngine();
         storeEngine.insert(Lists.newArrayList(new Row(rowColumns)),"user",Lists.newArrayList());
@@ -54,5 +57,29 @@ public class FileStoreEngineTest {
         //randomAccessFile.setLength(1024);
         long pointer = randomAccessFile.getFilePointer();
         logger.log(""+pointer);
+    }
+
+    @Test
+    public void  testIndex() {
+        ArrayIndex index =new ArrayIndex();
+        index.setStoreEngine(new FileStoreEngine());
+        index.setTableName("user");
+        index.init(new VarcharIndexKey(),0);
+        System.out.println(Arrays.asList(index.getIndexData()));
+    }
+    @Test
+    public void test_getRow()throws IOException{
+        FileStoreEngine storeEngine = new FileStoreEngine();
+        logger.log(storeEngine.getByPosition("user",64).toString());
+    }
+    @Test
+    public void testIndexFind()throws IOException{
+        ArrayIndex index =new ArrayIndex();
+        index.setStoreEngine(new FileStoreEngine());
+        index.setTableName("user");
+        index.init(new VarcharIndexKey(),1);
+        VarcharIndexKey indexKey = new VarcharIndexKey();
+        indexKey.setKey("l");
+        logger.log(index.queryByKey(indexKey));
     }
 }

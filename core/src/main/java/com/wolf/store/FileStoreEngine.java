@@ -7,13 +7,14 @@ import com.wolf.parser.Row;
 import com.wolf.parser.RowColumn;
 import com.wolf.parser.Schema;
 import com.wolf.utils.Logger;
+import com.wolf.utils.Pair;
 import java.io.File;
-import java.io.FileInputStream;
-import java.io.FileNotFoundException;
 import java.io.FileOutputStream;
 import java.io.IOException;
 import java.io.InputStream;
 import java.io.OutputStream;
+import java.io.RandomAccessFile;
+import java.nio.channels.Channels;
 import java.util.Collection;
 import java.util.Comparator;
 import java.util.List;
@@ -75,15 +76,14 @@ public class FileStoreEngine implements StoreEngine{
     }
 
     @Override public List<Row> queryAll(String tableName) throws IOException {
-        File file = new File(dataDir+tableName+tableSubffix);
-        FileInputStream inputStream;
-        try {
-             inputStream= new FileInputStream(file);
-        } catch (FileNotFoundException e) {
-            e.printStackTrace();
-            throw new StoreException("table file noe exists");
-        }
-        List<Row> rows = Lists.newArrayList();
+       return queryAllWithPosition(tableName).stream().map(Pair::getValue).collect(Collectors.toList());
+    }
+
+    public List<Pair<Long,Row>> queryAllWithPosition(String tableName) throws IOException {
+        RandomAccessFile file = new RandomAccessFile(dataDir+tableName+tableSubffix,"rw");
+        InputStream inputStream= Channels.newInputStream(file.getChannel());
+        List<Pair<Long,Row>> rows = Lists.newArrayList();
+        long point =file.getFilePointer();
         int dataLength = inputStream.read();
         while (dataLength!=-1){
             byte[] splits =  new byte[dataLength];
@@ -99,11 +99,37 @@ public class FileStoreEngine implements StoreEngine{
                     }
                     return Bytes.asList(temp);
                 }).collect(Collectors.toList());
-            rows.add(transform(tempDatas));
+            rows.add(new Pair<>(point,transform(tempDatas)));
+            point =file.getFilePointer();
             dataLength = inputStream.read();
         }
-
         return rows;
+    }
+
+    public Row getByPosition(String tableName , long position) throws IOException {
+
+        RandomAccessFile file = new RandomAccessFile(dataDir+tableName+tableSubffix,"rw");
+        file.seek(position);
+        InputStream inputStream= Channels.newInputStream(file.getChannel());
+        int dataLength = inputStream.read();
+        Row result =null;
+        if(dataLength!=-1){
+            byte[] splits =  new byte[dataLength];
+            inputStream.read(splits);
+
+            List<List<Byte>> tempDatas =Bytes.asList(splits).stream()
+                .map(e-> {
+                    byte[] temp =new byte[e];
+                    try {
+                        inputStream.read(temp);
+                    } catch (IOException e1) {
+                        throw new StoreException(e1);
+                    }
+                    return Bytes.asList(temp);
+                }).collect(Collectors.toList());
+            result = transform(tempDatas);
+        }
+       return result;
     }
 
 
