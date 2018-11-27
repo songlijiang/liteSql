@@ -4,10 +4,10 @@ import com.google.common.collect.Lists;
 import com.google.common.primitives.Bytes;
 import com.wolf.parser.Row;
 import com.wolf.parser.RowColumn;
-import com.wolf.store.FileStoreEngine;
+import com.wolf.store.directfile.FileStoreEngine;
 import com.wolf.store.StoreEngine;
 import com.wolf.store.index.ArrayIndex;
-import com.wolf.store.index.VarcharIndexKey;
+import com.wolf.store.index.VarcharDataHolder;
 import com.wolf.utils.Logger;
 import java.io.IOException;
 import java.io.RandomAccessFile;
@@ -34,7 +34,7 @@ public class FileStoreEngineTest {
 
     @Test
     public void testWrite()throws Exception{
-        List<String> contents = Lists.newArrayList("w","l","f","1","2","3");
+        List<String> contents = Lists.newArrayList("w","22","f","1","2","3");
         List<RowColumn> rowColumns = contents.stream().map(e->new RowColumn(1,1,e)).collect(Collectors.toList());
         StoreEngine storeEngine = new FileStoreEngine();
         storeEngine.insert(Lists.newArrayList(new Row(rowColumns)),"user",Lists.newArrayList());
@@ -64,7 +64,7 @@ public class FileStoreEngineTest {
         ArrayIndex index =new ArrayIndex();
         index.setStoreEngine(new FileStoreEngine());
         index.setTableName("user");
-        index.init(new VarcharIndexKey(),0);
+        index.init(new VarcharDataHolder(),1);
         System.out.println(Arrays.asList(index.getIndexData()));
     }
     @Test
@@ -77,9 +77,9 @@ public class FileStoreEngineTest {
         ArrayIndex index =new ArrayIndex();
         index.setStoreEngine(new FileStoreEngine());
         index.setTableName("user");
-        index.init(new VarcharIndexKey(),1);
-        VarcharIndexKey indexKey = new VarcharIndexKey();
-        indexKey.setKey("l");
+        index.init(new VarcharDataHolder(),1);
+        VarcharDataHolder indexKey = new VarcharDataHolder();
+        indexKey.setKey("22");
         logger.log(index.queryByKey(indexKey));
     }
 }

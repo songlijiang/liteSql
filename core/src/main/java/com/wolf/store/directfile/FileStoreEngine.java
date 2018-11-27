@@ -1,4 +1,4 @@
-package com.wolf.store;
+package com.wolf.store.directfile;
 
 import com.google.common.collect.Lists;
 import com.google.common.primitives.Bytes;
@@ -6,6 +6,7 @@ import com.wolf.exception.StoreException;
 import com.wolf.parser.Row;
 import com.wolf.parser.RowColumn;
 import com.wolf.parser.Schema;
+import com.wolf.store.StoreEngine;
 import com.wolf.utils.Logger;
 import com.wolf.utils.Pair;
 import java.io.File;
@@ -25,7 +26,7 @@ import lombok.AllArgsConstructor;
 /**
  * Created by slj on 2018-11-03
  */
-public class FileStoreEngine implements StoreEngine{
+public class FileStoreEngine implements StoreEngine {
 
 
     private static String dataDir ="/Users/lijiang.song/data/";

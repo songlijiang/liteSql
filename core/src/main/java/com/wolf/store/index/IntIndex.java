@@ -6,15 +6,17 @@ import lombok.Data;
  * Created by slj on 2018-11-15
  */
 @Data
-class IntIndex extends IndexKey<Integer>{
+class IntIndex extends DataHolder<Integer> {
 
-    @Override public int compareKey(Integer i1, Integer i2) {
-        return i1.compareTo(i2);
-    }
+    private Integer data;
 
-    @Override IndexKey fromRow(String indexData) {
+    @Override DataHolder fromRow(String indexData) {
         IntIndex index = new IntIndex();
         index.setKey(Integer.parseInt(indexData));
         return index;
+    }
+
+    @Override public int compareTo(Integer another) {
+        return data.compareTo(another);
     }
 }
