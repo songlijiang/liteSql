@@ -1,6 +1,7 @@
 package com.wolf.store.bplustree;
 
 import com.wolf.store.index.DataHolder;
+import java.lang.reflect.Array;
 import lombok.Data;
 
 /**
@@ -9,10 +10,16 @@ import lombok.Data;
 @Data
 public class LeafNode<K extends DataHolder<K>,V extends DataHolder<V>> extends Node<K ,V>{
 
-    private final V values[];
+    private  V values[];
 
     private int leftId;
 
     private int rightId;
+
+    protected LeafNode (BPlusTree bPlusTree){
+        super(bPlusTree);
+        values = (V[])Array.newInstance(bPlusTree.getVType(),bPlusTree.getNODE_DEGREE()*2);
+    }
+
 
 }

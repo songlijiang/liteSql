@@ -3,7 +3,11 @@ package com.wolf.store.bplustree;
 import com.wolf.exception.DuplicateKeyException;
 import com.wolf.exception.IllegalParamException;
 import com.wolf.store.index.DataHolder;
+import com.wolf.utils.ArrayUtils;
+import com.wolf.utils.Pair;
 import java.util.Arrays;
+import java.util.concurrent.atomic.AtomicInteger;
+import java.util.stream.IntStream;
 import lombok.Data;
 
 /**
@@ -17,15 +21,16 @@ import lombok.Data;
 @Data
 public abstract class BPlusTree<K extends DataHolder<K> ,V extends DataHolder<V>> {
 
+    public Class<?> kType;
+
+    public Class<?> vType;
+
     protected int rootId;
 
     /**
      * m/2
      */
-    private final int INTERNAL_DEGREE;
-
-
-    private final int LEAF_DEGREE;
+    private final int NODE_DEGREE;
 
 
     private int  blockSize =512;
@@ -41,7 +46,7 @@ public abstract class BPlusTree<K extends DataHolder<K> ,V extends DataHolder<V>
      * @param value
      * @return
      */
-    private int insert(final  K key,final  V  value){
+    private <K extends DataHolder<K> ,V extends DataHolder<V>> int insert(final  K key,final  V  value){
 
         if(key==null || value==null){
             throw new IllegalParamException();
@@ -53,38 +58,126 @@ public abstract class BPlusTree<K extends DataHolder<K> ,V extends DataHolder<V>
             throw new NullPointerException("find key error");
         }
 
+        K oldLeafNodeOnInternalNodeKey = leafNode.getKeys()[0];
+
         int slot = leafNode.findSlotByKey(key);
 
         if(slot>0){
             throw new DuplicateKeyException();
         }
-        int slotIndex =slot>0?slot: -slot;
+        int slotIndex =Math.abs(slot);
 
 
 
         if(!leafNode.isFull()){
-            if(slotIndex<leafNode.getAllocated().get()){
-                //copy key
-                System.arraycopy(leafNode.getKeys(),slotIndex+1,leafNode.getKeys(),slotIndex+1,
-                    leafNode.getKeys().length-(slotIndex+1));
+            //copy key
+            System.arraycopy(leafNode.getKeys(),slotIndex+1,leafNode.getKeys(),slotIndex+1,
+                leafNode.getKeys().length-(slotIndex+1));
+
+            //copy value
+            System.arraycopy(leafNode.getValues(),slotIndex+1,leafNode.getValues(),slotIndex+1,
+                leafNode.getValues().length-(slotIndex+1));
+
+            //insert key
+            leafNode.getKeys()[slotIndex]= key;
+            //insert value
+            leafNode.getValues()[slotIndex]=value;
+            leafNode.getAllocated().incrementAndGet();
+
+        }else {
+
+            int index =ArrayUtils.findLessIndexByKey(leafNode.getKeys(),leafNode.getAllocated().get(),key);
+            K[] allKeys = ArrayUtils.insertSorted(leafNode.getKeys(),leafNode.getAllocated().get(),key,index,kType);
+            V[] allValues = ArrayUtils.insertSorted(leafNode.getValues(),leafNode.getAllocated().get(),value,index,vType);
+
+            int splitIndex = allKeys.length/2;
+            Pair<K[],K[]> oldAndNewKeyPair = ArrayUtils.split(allKeys,splitIndex,kType);
+            Pair<V[],V[]> oldAndNewValuePair = ArrayUtils.split(allValues,splitIndex,vType);
+
+            //set old
+            leafNode.setKeys(oldAndNewKeyPair.getLeft());
+            leafNode.setValues(oldAndNewValuePair.getLeft());
+            leafNode.setAllocated(new AtomicInteger(oldAndNewKeyPair.getLeft().length));
+
+            //set new
+            LeafNode newLeafNode = newLeafNode();
+            newLeafNode.setKeys(oldAndNewKeyPair.getValue());
+            newLeafNode.setValues(oldAndNewValuePair.getValue());
+            newLeafNode.setAllocated(new AtomicInteger(oldAndNewValuePair.getRight().length));
+
+            InternalNode internalNode = findParentNode(key);
+            if(!internalNode.isFull()){
+                //remove old add new 2 leaf refresh internalNode key and childs
+                int oldInternalNodeKeyIndex = internalNode.findSlotByKey(oldLeafNodeOnInternalNodeKey);
+                if(oldInternalNodeKeyIndex<0){
+                    throw new IllegalParamException();
+                }
 
 
-                //copy value
-                System.arraycopy(leafNode.getValues(),slotIndex+1,leafNode.getValues(),slotIndex+1,
-                    leafNode.getValues().length-(slotIndex+1));
+                internalNode.getKeys()[oldInternalNodeKeyIndex] = leafNode.getKeys()[0];
+                internalNode.getChilds()[oldInternalNodeKeyIndex+1] = leafNode.getId();
 
-                //insert key
-                leafNode.getKeys()[slotIndex]= key;
-                //insert value
-                leafNode.getValues()[slotIndex]=value;
+
+                internalNode.setKeys(ArrayUtils.insertSorted(internalNode.getKeys(),internalNode.getAllocated().get(),
+                    newLeafNode.getKeys()[0],oldInternalNodeKeyIndex+1,kType));
+
+                internalNode.setChilds(Arrays.asList(ArrayUtils.insertSorted(
+                    IntStream.of( internalNode.getChilds() ).boxed().toArray( Integer[]::new ),
+                    internalNode.getAllocated().get()+1
+                    ,newLeafNode.getId(),oldInternalNodeKeyIndex+2,Integer.class)
+                ).stream().mapToInt(Integer::intValue).toArray());
+
+
+            }else {
+
+                //internalNode is full , iterator split internalNode increase parentNode
+
+                InternalNode parent =findParentNode(internalNode.getKeys()[0]);
+                while (parent.isFull()){
+                    //split
+
+
+                    //update parent value
+                    parent =findParentNode(parent.getKeys()[0]);
+                }
+
+
+
+
             }
         }
 
+    }
 
 
-        leafNode.getAllocated().incrementAndGet();
+    private  void splitInternalNode(InternalNode internalNode,K newNodeKey,int newNodeId){
+        if(!internalNode.isFull()){
+            return;
+        }
+        int index =ArrayUtils.findLessIndexByKey(internalNode.getKeys(),internalNode.getAllocated().get(),newNodeKey);
+        K[] allKeys = ArrayUtils.insertSorted(internalNode.getKeys(),internalNode.getAllocated().get(),key,index,kType);
+        V[] allValues = ArrayUtils.insertSorted(leafNode.getValues(),leafNode.getAllocated().get(),value,index,vType);
+
+        int splitIndex = allKeys.length/2;
+        Pair<K[],K[]> oldAndNewKeyPair = ArrayUtils.split(allKeys,splitIndex,kType);
+        Pair<V[],V[]> oldAndNewValuePair = ArrayUtils.split(allValues,splitIndex,vType);
+
+        //set old
+        leafNode.setKeys(oldAndNewKeyPair.getLeft());
+        leafNode.setValues(oldAndNewValuePair.getLeft());
+        leafNode.setAllocated(new AtomicInteger(oldAndNewKeyPair.getLeft().length));
+
+        //set new
+        LeafNode newLeafNode = newLeafNode();
+        newLeafNode.setKeys(oldAndNewKeyPair.getValue());
+        newLeafNode.setValues(oldAndNewValuePair.getValue());
+        newLeafNode.setAllocated(new AtomicInteger(oldAndNewValuePair.getRight().length));
 
 
+    }
+
+    private LeafNode newLeafNode(){
+       return new LeafNode<K,V>(this);
     }
 
 
@@ -106,14 +199,14 @@ public abstract class BPlusTree<K extends DataHolder<K> ,V extends DataHolder<V>
         return leafNode.getValues()[slot];
     }
 
-    private LeafNode<K,V> findLeafNode(K key) {
+    private <K extends DataHolder<K> ,V extends DataHolder<V>> LeafNode<K,V> findLeafNode(K key) {
 
         Node<K,V> node = getNodeById(rootId);
 
         while (!node.isLeafNode()){
             InternalNode internalNode = (InternalNode) node;
             int slot =node.findSlotByKey(key);
-            int slotId = slot>0 ? slot+1:-(slot+1);
+            int slotId = slot>0 ? slot+1:-slot;
             int childId = internalNode.getChilds()[slotId];
             node = getNodeById(childId);
         }
@@ -121,5 +214,27 @@ public abstract class BPlusTree<K extends DataHolder<K> ,V extends DataHolder<V>
         return (LeafNode<K, V>) node;
     }
 
-    protected abstract Node<K,V> getNodeById(int rootId);
+    private <K extends DataHolder<K> ,V extends DataHolder<V>> InternalNode<K,V> findParentNode(K key){
+        Node<K,V> node = getNodeById(rootId);
+        Node<K,V> parent = node;
+        boolean find =false;
+        while (!node.isLeafNode() && !find){
+            InternalNode internalNode = (InternalNode) node;
+            int slot =node.findSlotByKey(key);
+            find = slot>0;
+            int slotId = slot>0 ? slot+1:-slot;
+            int childId = internalNode.getChilds()[slotId];
+            parent =node;
+            node = getNodeById(childId);
+        }
+        return find?(InternalNode<K, V>) parent:null;
+    }
+
+
+
+
+    protected  abstract <K extends DataHolder<K> ,V extends DataHolder<V>> Node<K,V> getNodeById(int rootId);
+
+    public abstract int allcateId();
+
 }

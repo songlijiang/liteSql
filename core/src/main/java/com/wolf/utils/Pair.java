@@ -13,4 +13,13 @@ public class Pair<T,V> {
     T key;
 
     V value;
+
+
+    public T getLeft(){
+        return key;
+    }
+
+    public V getRight(){
+        return value;
+    }
 }
