@@ -64,7 +64,7 @@ public class FileStoreEngineTest {
         ArrayIndex index =new ArrayIndex();
         index.setStoreEngine(new FileStoreEngine());
         index.setTableName("user");
-        index.init(new VarcharDataHolder(),1);
+        index.init(new VarcharDataHolder("1"),1);
         System.out.println(Arrays.asList(index.getIndexData()));
     }
     @Test
@@ -77,9 +77,8 @@ public class FileStoreEngineTest {
         ArrayIndex index =new ArrayIndex();
         index.setStoreEngine(new FileStoreEngine());
         index.setTableName("user");
-        index.init(new VarcharDataHolder(),1);
-        VarcharDataHolder indexKey = new VarcharDataHolder();
-        indexKey.setKey("22");
+        index.init(new VarcharDataHolder("1"),1);
+        VarcharDataHolder indexKey = new VarcharDataHolder("22");
         logger.log(index.queryByKey(indexKey));
     }
 }

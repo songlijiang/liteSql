@@ -11,7 +11,9 @@ import static com.wolf.utils.ArrayUtils.findLessIndexByKey;
  * Created by slj on 2018-11-27
  */
 @Data
-public abstract class Node<K extends DataHolder> {
+public abstract class Node<K extends DataHolder<K>,V extends DataHolder<V>> {
+
+    public static final int NULL_ID = -1;
 
     private int id;
 
@@ -19,17 +21,18 @@ public abstract class Node<K extends DataHolder> {
 
     private AtomicInteger allocated;
 
+    private BPlusTree bPlusTree;
+
 
     protected   Node(BPlusTree bPlusTree){
+        this.bPlusTree = bPlusTree;
         this.keys = (K[]) Array.newInstance(bPlusTree.kType,bPlusTree.getNODE_DEGREE()*2);
-        this.id = bPlusTree.allcateId();
+        this.id = bPlusTree.allocateId();
         allocated=new AtomicInteger(0);
     }
 
 
-    public boolean isLeafNode(){
-        return id<0;
-    }
+    public abstract boolean isLeafNode();
 
     /**
      *
@@ -40,10 +43,11 @@ public abstract class Node<K extends DataHolder> {
         return findLessIndexByKey(keys,allocated.get(),key);
     }
 
-
-
     protected boolean isFull(){
-        return keys.length>=allocated.get();
+        return allocated.get() >=keys.length;
     }
 
+    public abstract  K splitShiftKeyLeft();
+
+    public abstract Node<K, V> split();
 }

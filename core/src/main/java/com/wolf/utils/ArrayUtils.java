@@ -13,14 +13,18 @@ public class ArrayUtils {
         int minIndex=0;
         int maxIndex =length-1;
 
+        if(length==1){
+            return key.compareTo(keys[0])>0?-1:0;
+        }
+
         while (maxIndex>minIndex){
             int middleIndex = (maxIndex+minIndex) >>> 1;
             K middleKey  = keys[middleIndex];
             int result =middleKey.compareTo(key);
             if(result>0){
-                maxIndex=middleIndex+1;
+                maxIndex=middleIndex;
             }else if(result<0){
-                minIndex=middleIndex-1;
+                minIndex=middleIndex+1;
             }else {
                 return middleIndex;  //key find
             }
@@ -33,16 +37,16 @@ public class ArrayUtils {
 
     public static <K extends Comparable>  K[] insertSorted(K[] keys,int length,K key,int index,Class keyType){
 
-        if(index>0){
+        if(index<0){
             throw new IllegalParamException();
         }
 
-        K[] leafAllKeys = (K[]) Array.newInstance(keyType,length+1);
+        K[] leafAllKeys = (K[]) Array.newInstance(keyType,keys.length);
 
-        System.arraycopy(keys,0,leafAllKeys,0,(-index)+1);
-        leafAllKeys[(-index)+1]=key;
-        System.arraycopy(keys,(-index)+1,leafAllKeys,(-index)+2
-            ,length-((-index)+1));
+        System.arraycopy(keys,0,leafAllKeys,0,index);
+        System.arraycopy(keys,index+1,leafAllKeys,index+1,keys.length-(index)-1);
+        leafAllKeys[index]=key;
+
         return leafAllKeys;
     }
 

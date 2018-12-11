@@ -8,12 +8,9 @@ import lombok.Data;
 @Data
 public  abstract class DataHolder<T> implements Comparable<T> {
 
-    T key;
-
     abstract DataHolder fromRow(String indexData);
-
-
 
     @Override
     abstract public int compareTo(final T another);
+
 }

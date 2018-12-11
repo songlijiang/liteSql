@@ -9,6 +9,7 @@ import java.io.IOException;
 import java.util.Comparator;
 import java.util.List;
 import java.util.function.Function;
+import java.util.stream.Collectors;
 import lombok.Data;
 
 /**
@@ -38,10 +39,11 @@ public class ArrayIndex<T extends DataHolder<T>> {
             throw new IndexException(e);
         }
 
-        indexData = datas.stream().map(e->
+        List<IndexData> indexDataLists = datas.stream().map(e->
             transform(e,keyType,columnId)
-        ).sorted(Comparator.comparing((Function<IndexData, DataHolder>) IndexData::getKey))
-            .toArray(IndexData[]::new);
+        ).collect(Collectors.toList());
+
+        indexData =indexDataLists.toArray(new IndexData[indexDataLists.size()]);
 
     }
 

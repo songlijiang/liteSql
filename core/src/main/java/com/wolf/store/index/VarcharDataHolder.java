@@ -1,20 +1,25 @@
 package com.wolf.store.index;
 
+import lombok.Data;
+
 /**
  * Created by slj on 2018-11-15
  */
-public class VarcharDataHolder extends DataHolder<String> {
+@Data
+public class VarcharDataHolder extends DataHolder<VarcharDataHolder> {
 
-    private String data;
+    private String key;
+
+    public VarcharDataHolder(String data){
+        this.key =data;
+    }
 
 
     @Override DataHolder fromRow(String indexData) {
-        VarcharDataHolder index = new VarcharDataHolder();
-        index.setKey(indexData);
-        return index;
+        return new VarcharDataHolder(indexData);
     }
 
-    @Override public int compareTo(String another) {
-        return data.compareTo(another);
+    @Override public int compareTo(VarcharDataHolder another) {
+        return this.key.compareTo(another.getKey());
     }
 }
