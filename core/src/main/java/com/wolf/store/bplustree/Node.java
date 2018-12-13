@@ -4,6 +4,7 @@ import com.wolf.store.index.DataHolder;
 import java.lang.reflect.Array;
 import java.util.concurrent.atomic.AtomicInteger;
 import lombok.Data;
+import lombok.ToString;
 
 import static com.wolf.utils.ArrayUtils.findLessIndexByKey;
 
@@ -11,9 +12,10 @@ import static com.wolf.utils.ArrayUtils.findLessIndexByKey;
  * Created by slj on 2018-11-27
  */
 @Data
+@ToString(exclude={"bPlusTree"})
 public abstract class Node<K extends DataHolder<K>,V extends DataHolder<V>> {
 
-    public static final int NULL_ID = -1;
+    public static final int NULL_ID = 0;
 
     private int id;
 
@@ -39,8 +41,8 @@ public abstract class Node<K extends DataHolder<K>,V extends DataHolder<V>> {
      * @param key
      * @return
      */
-    public int findSlotByKey(K key) {
-        return findLessIndexByKey(keys,allocated.get(),key);
+    public int findSlotByKey(K key,Class kType) {
+        return findLessIndexByKey(keys,allocated.get(),key,kType);
     }
 
     protected boolean isFull(){

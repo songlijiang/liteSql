@@ -9,10 +9,47 @@ import java.lang.reflect.Array;
 public class ArrayUtils {
 
 
-    public  static <K extends Comparable> int findLessIndexByKey(K[] keys,int length,K key){
+
+    public static <K extends Comparable<K>> int findPosition(K[] keys,int start,int end,K key){
+        if(keys.length==0){
+            return 0;
+        }
+        if(start==end){
+            int result =keys[start].compareTo(key);
+            if(result==0){
+                return start;
+            }else if(result>0){
+                return -start;
+            }else {
+                return -(start+1);
+            }
+        }
+
+        int middle = (start+end) >>> 1;
+
+        int temp = keys[middle].compareTo(key);
+        if(temp==0){
+            return findPosition(keys,middle,middle,key);
+        }else if(temp>0){
+            return findPosition(keys,start,middle>start?middle-1:middle,key);
+        }else {
+            return findPosition(keys,middle<end?middle+1:middle,end,key);
+        }
+
+    }
+
+    public  static <K extends Comparable<K>> int findLessIndexByKey(K[] keys,int length,K key,Class kType) {
+        K [] temps = (K[])Array.newInstance(kType,length);
+        System.arraycopy(keys,0,temps,0,length);
+        return findPosition(temps,0,length>0?length-1:0,key);
+    }
+
+    public  static <K extends Comparable<K>> int findLessIndexByKey_v1(K[] keys,int length,K key){
         int minIndex=0;
         int maxIndex =length-1;
-
+        if(length==0){
+            return 0;
+        }
         if(length==1){
             return key.compareTo(keys[0])>0?-1:0;
         }
@@ -30,7 +67,7 @@ public class ArrayUtils {
             }
         }
 
-        return -minIndex;   // key not find
+        return -(minIndex+1);   // key not find
 
     }
 
@@ -44,7 +81,7 @@ public class ArrayUtils {
         K[] leafAllKeys = (K[]) Array.newInstance(keyType,keys.length);
 
         System.arraycopy(keys,0,leafAllKeys,0,index);
-        System.arraycopy(keys,index+1,leafAllKeys,index+1,keys.length-(index)-1);
+        System.arraycopy(keys,index,leafAllKeys,index+1,keys.length-(index)-1);
         leafAllKeys[index]=key;
 
         return leafAllKeys;

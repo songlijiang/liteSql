@@ -4,11 +4,13 @@ import com.wolf.store.index.DataHolder;
 import com.wolf.utils.ArrayUtils;
 import java.lang.reflect.Array;
 import lombok.Data;
+import lombok.ToString;
 
 /**
  * Created by slj on 2018-11-27
  */
 @Data
+@ToString(callSuper=true,exclude={"bPlusTree"})
 public class LeafNode<K extends DataHolder<K>,V extends DataHolder<V>> extends Node<K ,V>{
 
     private  V values[];

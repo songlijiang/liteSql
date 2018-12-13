@@ -3,7 +3,6 @@ package com.wolf;
 import com.wolf.store.bplustree.BPlusTree;
 import com.wolf.store.bplustree.MemoryBPlusTree;
 import com.wolf.store.index.IntIndex;
-import com.wolf.store.index.VarcharDataHolder;
 import org.junit.Test;
 
 /**
@@ -15,12 +14,16 @@ public class MemoryBPlusTreeTest {
 
     @Test
     public void test_init(){
-        BPlusTree bPlusTree = new MemoryBPlusTree(IntIndex.class,IntIndex.class,10);
+        MemoryBPlusTree bPlusTree = new MemoryBPlusTree(IntIndex.class,IntIndex.class,10);
         bPlusTree.init();
-        for (int i = 0; i <30 ; i++) {
+        for (int i = 0; i <300000 ; i++) {
+            if(i==210){
+                i=210;
+            }
             bPlusTree.add(new IntIndex(i),new IntIndex(i*2));
         }
-        System.out.println(bPlusTree.findByKey(new IntIndex(4)));
+        System.out.println(bPlusTree.findByKey(new IntIndex(1212)));
+       // System.out.println(bPlusTree.getStore().size());
     }
 
 

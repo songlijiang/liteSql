@@ -3,12 +3,15 @@ package com.wolf.store.bplustree;
 import com.google.common.collect.Maps;
 import com.wolf.exception.IllegalParamException;
 import com.wolf.store.index.DataHolder;
+import com.wolf.utils.Logger;
 import java.util.Map;
 import java.util.concurrent.atomic.AtomicInteger;
+import lombok.Data;
 
 /**
  * Created by slj on 2018/12/11
  */
+@Data
 public class MemoryBPlusTree<K extends DataHolder<K>,V extends DataHolder<V>> extends BPlusTree<K,V>{
 
     Map<Integer,Node<K,V>> store = Maps.newConcurrentMap();
@@ -22,7 +25,8 @@ public class MemoryBPlusTree<K extends DataHolder<K>,V extends DataHolder<V>> ex
     }
 
     @Override public Node<K, V> getNodeById(int rootId) {
-        return store.get(rootId);
+        Node<K,V> node = store.get(rootId);
+        return node;
     }
 
     @Override public int allocateId() {

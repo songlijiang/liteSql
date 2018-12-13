@@ -4,6 +4,7 @@ import com.wolf.exception.DuplicateKeyException;
 import com.wolf.exception.IllegalParamException;
 import com.wolf.store.index.DataHolder;
 import com.wolf.utils.ArrayUtils;
+import com.wolf.utils.Logger;
 import com.wolf.utils.Pair;
 import java.util.Arrays;
 import java.util.Objects;
@@ -37,6 +38,8 @@ public abstract class BPlusTree<K extends DataHolder<K> ,V extends DataHolder<V>
 
 
     private int  blockSize =512;
+
+    private Logger logger = new Logger(this.getClass().getName());
 
     public BPlusTree (Class kType,Class vType,int degree){
 
@@ -90,16 +93,16 @@ public abstract class BPlusTree<K extends DataHolder<K> ,V extends DataHolder<V>
 
     protected Node<K,V> addIterator(K key,V value){
 
-        LeafNode<K,V> leafNode = findLeafNode(key,true);
+        LeafNode<K,V> leafNode = findLeafNode(key,true,false);
 
-        int slot = leafNode.findSlotByKey(key);
+        int slot = leafNode.findSlotByKey(key,kType);
         if(slot>0){
             throw new IllegalParamException();
         }
         slot =Math.abs(slot);
         leafNode.add(slot,key,value,kType,vType);
 
-        LeafNode<K,V> newNode = leafNode.isFull()?leafNode.split():null;
+        Node<K,V> newNode = leafNode.isFull()?leafNode.split():null;
         while (!stackSlots.isEmpty()){
             slot = stackSlots.pop();
             InternalNode<K,V> stackInternalNode = stackNodes.pop();
@@ -108,7 +111,10 @@ public abstract class BPlusTree<K extends DataHolder<K> ,V extends DataHolder<V>
                 K splitShiftKeyLeft = newNode.splitShiftKeyLeft();
                 stackInternalNode.add(slot,splitShiftKeyLeft,newNode.getId(),kType);
             }
-            newNode = stackInternalNode.isFull()?(LeafNode<K,V>)stackInternalNode.split():null;
+            newNode = stackInternalNode.isFull()?stackInternalNode.split():null;
+        }
+        if(newNode!=null){
+            save(newNode);
         }
 
         return newNode;
@@ -267,7 +273,7 @@ public abstract class BPlusTree<K extends DataHolder<K> ,V extends DataHolder<V>
             return null;
         }
 
-        LeafNode<K,V> leafNode = findLeafNode(key,false);
+        LeafNode<K,V> leafNode = findLeafNode(key,false,true);
 
         if(leafNode==null){
             return null;
@@ -283,9 +289,12 @@ public abstract class BPlusTree<K extends DataHolder<K> ,V extends DataHolder<V>
         return leafNode.getValues()[slot];
     }
 
-    private  LeafNode<K,V> findLeafNode(K key,boolean trancePath) {
+    private  LeafNode<K,V> findLeafNode(K key,boolean trancePath,boolean logTrance) {
 
         Node<K,V> node = getNodeById(rootId);
+        if(logTrance){
+            logger.log(node);
+        }
         if(trancePath){
             stackSlots.clear();
             stackNodes.clear();
@@ -293,7 +302,7 @@ public abstract class BPlusTree<K extends DataHolder<K> ,V extends DataHolder<V>
 
         while (!node.isLeafNode()){
             InternalNode<K,V> internalNode = (InternalNode<K,V>) node;
-            int slot =node.findSlotByKey(key);
+            int slot =node.findSlotByKey(key,kType);
             int slotId = slot>0 ? slot+1:-slot;
             if(trancePath){
                 stackSlots.push(slotId);
@@ -301,6 +310,9 @@ public abstract class BPlusTree<K extends DataHolder<K> ,V extends DataHolder<V>
             }
             int childId = internalNode.getChilds()[slotId];
             node = getNodeById(childId);
+            if(logTrance){
+                logger.log(node);
+            }
         }
 
         return (LeafNode<K, V>) node;
@@ -312,7 +324,7 @@ public abstract class BPlusTree<K extends DataHolder<K> ,V extends DataHolder<V>
         boolean find =false;
         while (!node.isLeafNode() && !find){
             InternalNode internalNode = (InternalNode) node;
-            int slot =node.findSlotByKey(key);
+            int slot =node.findSlotByKey(key,kType);
             find = slot>0;
             int slotId = slot>0 ? slot+1:-slot;
             int childId = internalNode.getChilds()[slotId];
