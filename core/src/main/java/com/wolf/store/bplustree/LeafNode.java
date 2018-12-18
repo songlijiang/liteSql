@@ -24,7 +24,7 @@ public class LeafNode<K extends DataHolder<K>,V extends DataHolder<V>> extends N
         values = (V[])Array.newInstance(bPlusTree.getVType(),bPlusTree.getNODE_DEGREE()*2);
     }
 
-    private LeafNode newLeafNode(){
+    private LeafNode<K,V> newLeafNode(){
         return new LeafNode(this.getBPlusTree());
     }
 
@@ -41,8 +41,8 @@ public class LeafNode<K extends DataHolder<K>,V extends DataHolder<V>> extends N
 
     }
 
-    public  LeafNode split(){
-        LeafNode newNode = newLeafNode();
+    public  LeafNode<K,V> split(){
+        LeafNode<K,V> newNode = newLeafNode();
         int size  = this.getAllocated().get()>>>1;
         int newSize = this.getAllocated().get()-size;
         System.arraycopy(getKeys(),size,newNode.getKeys(),0,newSize);

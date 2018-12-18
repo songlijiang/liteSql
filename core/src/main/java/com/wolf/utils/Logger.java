@@ -1,5 +1,7 @@
 package com.wolf.utils;
 
+import java.util.Date;
+
 /**
  * Created by slj on 2018-11-03
  */
@@ -13,9 +15,9 @@ public class Logger {
     }
 
     public void log(String message){
-        System.out.println(preFix+" "+message);
+        System.out.println(new Date().getTime()+preFix+" "+message);
     }
     public void log(Object o){
-        System.out.println(preFix+" "+o==null?"null":o);
+        System.out.println(o);
     }
 }

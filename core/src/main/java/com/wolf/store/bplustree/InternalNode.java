@@ -41,9 +41,10 @@ public final class InternalNode<K extends DataHolder<K>,V extends DataHolder<V>>
 
     public void add(int slot, K splitShiftKeyLeft, int id,Class keyType) {
         setKeys(ArrayUtils.insertSorted(getKeys(),getAllocated().get(),splitShiftKeyLeft,slot,keyType));
-        List<Integer> childsList =   Arrays.asList(ArrayUtils.insertSorted( IntStream.of( getChilds() ).boxed().toArray( Integer[]::new ),
+        List<Integer> childsList =   Arrays.asList(ArrayUtils.insertSorted(
+            IntStream.of( getChilds() ).boxed().toArray( Integer[]::new ),
             getAllocated().get()+1,id,slot+1,Integer.class));
-        if(childsList.contains(-1)){
+        if(childsList.get(20)==30599){
             childsList.size();
         }
         setChilds(childsList.stream().mapToInt(Integer::intValue).toArray());
@@ -60,8 +61,11 @@ public final class InternalNode<K extends DataHolder<K>,V extends DataHolder<V>>
         newNode.getAllocated().set(newSize);
         for (int i = 0; i < newSize; i++) {
             this.getKeys()[i+size]=null;
-            this.getChilds()[i+size]=NULL_ID;
+            if(i!=0){
+                this.getChilds()[i+size]=NULL_ID;
+            }
         }
+        this.getChilds()[size+newSize]=NULL_ID;
         return newNode;
     }
 
