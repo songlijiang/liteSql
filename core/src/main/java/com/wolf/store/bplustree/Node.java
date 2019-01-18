@@ -2,6 +2,7 @@ package com.wolf.store.bplustree;
 
 import com.wolf.store.index.DataHolder;
 import java.lang.reflect.Array;
+import java.nio.ByteBuffer;
 import java.util.concurrent.atomic.AtomicInteger;
 import lombok.Data;
 import lombok.ToString;
@@ -52,4 +53,13 @@ public abstract class Node<K extends DataHolder<K>,V extends DataHolder<V>> {
     public abstract  K splitShiftKeyLeft();
 
     public abstract Node<K, V> split();
+
+    public abstract void serialize(ByteBuffer byteBuffer);
+
+
+    private void serializeBase(ByteBuffer byteBuffer){
+
+
+
+    }
 }

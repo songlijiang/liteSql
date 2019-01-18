@@ -3,6 +3,7 @@ package com.wolf.store.bplustree;
 import com.wolf.store.index.DataHolder;
 import com.wolf.utils.ArrayUtils;
 import java.lang.reflect.Array;
+import java.nio.ByteBuffer;
 import lombok.Data;
 import lombok.ToString;
 
@@ -67,5 +68,10 @@ public class LeafNode<K extends DataHolder<K>,V extends DataHolder<V>> extends N
 
     @Override public boolean isLeafNode() {
         return true;
+    }
+
+
+    @Override public void serialize(ByteBuffer byteBuffer) {
+
     }
 }

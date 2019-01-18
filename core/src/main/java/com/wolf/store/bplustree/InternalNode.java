@@ -2,6 +2,7 @@ package com.wolf.store.bplustree;
 
 import com.wolf.store.index.DataHolder;
 import com.wolf.utils.ArrayUtils;
+import java.nio.ByteBuffer;
 import java.util.Arrays;
 import java.util.List;
 import java.util.stream.IntStream;
@@ -71,5 +72,9 @@ public final class InternalNode<K extends DataHolder<K>,V extends DataHolder<V>>
 
     @Override public boolean isLeafNode() {
         return false;
+    }
+
+    @Override public void serialize(ByteBuffer byteBuffer) {
+
     }
 }

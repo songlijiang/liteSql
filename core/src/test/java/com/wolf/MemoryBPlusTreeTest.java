@@ -1,10 +1,8 @@
 package com.wolf;
 
-import com.google.common.collect.Lists;
 import com.wolf.store.bplustree.MemoryBPlusTree;
 import com.wolf.store.index.IntIndex;
 import java.util.Arrays;
-import java.util.List;
 import org.junit.Test;
 
 /**

@@ -1,5 +1,6 @@
 package com.wolf.store.index;
 
+import java.nio.ByteBuffer;
 import lombok.Data;
 
 /**
@@ -21,5 +22,17 @@ public class IntIndex extends DataHolder<IntIndex> {
 
     @Override public int compareTo(IntIndex another) {
         return key.compareTo(another.key);
+    }
+
+    @Override public int length() {
+        return 4;
+    }
+
+    @Override public void serialize(ByteBuffer byteBuffer) {
+        byteBuffer.putInt(key);
+    }
+
+    @Override public IntIndex deSerialize(ByteBuffer byteBuffer) {
+        return new IntIndex(byteBuffer.getInt());
     }
 }

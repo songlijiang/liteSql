@@ -37,13 +37,13 @@ public class FileStoreEngineTest {
         List<String> contents = Lists.newArrayList("w","22","f","1","2","3");
         List<RowColumn> rowColumns = contents.stream().map(e->new RowColumn(1,1,e)).collect(Collectors.toList());
         StoreEngine storeEngine = new FileStoreEngine();
-        storeEngine.insert(Lists.newArrayList(new Row(rowColumns)),"user",Lists.newArrayList());
+        storeEngine.insert(Lists.newArrayList(new Row(rowColumns)),"user1",Lists.newArrayList());
     }
 
     @Test
     public void testqueryAll()throws Exception{
         StoreEngine storeEngine = new FileStoreEngine();
-        List<Row> rows = storeEngine.queryAll("user");
+        List<Row> rows = storeEngine.queryAll("user1");
         rows.forEach(e->logger.log(e.toString()));
     }
 
