@@ -20,6 +20,10 @@ import lombok.Data;
 @Data
 public abstract class BPlusTree<K extends DataHolder<K> ,V extends DataHolder<V>> {
 
+    private DataHolder keyType;
+
+    private DataHolder valueType;
+
     public Class<?> kType;
 
     public Class<?> vType;
@@ -29,25 +33,31 @@ public abstract class BPlusTree<K extends DataHolder<K> ,V extends DataHolder<V>
     /**
      * m/2
      */
-    private final int NODE_DEGREE;
+    final int NODE_DEGREE;
 
 
     private int  blockSize =512;
 
     private Logger logger = new Logger(this.getClass().getName());
 
-    public BPlusTree (Class kType,Class vType,int degree){
+    public BPlusTree (DataHolder kType,DataHolder vType,int degree){
 
-        this.kType=kType;
-        this.vType=vType;
+        this.kType=kType.getClass();
+        this.vType=vType.getClass();
+        this.keyType=kType;
+        this.valueType=vType;
         this.NODE_DEGREE = degree;
 
     }
 
     public void init(){
         LeafNode<K,V> rootNode = new LeafNode<K,V>(this);
-        this.rootId = rootNode.getId();
+        this.setRootId(rootNode.getId());
         save(rootNode);
+    }
+
+    protected void setRootId(int rootId){
+        this.rootId = rootId;
     }
 
 
@@ -73,10 +83,11 @@ public abstract class BPlusTree<K extends DataHolder<K> ,V extends DataHolder<V>
                 InternalNode<K,V> newRoot = new InternalNode(this);
                 K firstKey = newNode.splitShiftKeyLeft();
                 newRoot.getKeys()[0]=firstKey;
-                newRoot.getChilds()[0]=rootId;
-                newRoot.getChilds()[1]=newNode.getId();
+                newRoot.getChildren()[0]=rootId;
+                newRoot.getChildren()[1]=newNode.getId();
                 newRoot.getAllocated().set(1);
-                this.rootId=newRoot.getId();
+                this.setRootId(newRoot.getId());
+                save(newNode);
                 save(newRoot);
             }
         }  finally {
@@ -90,7 +101,7 @@ public abstract class BPlusTree<K extends DataHolder<K> ,V extends DataHolder<V>
 
         LeafNode<K,V> leafNode = findLeafNode(key,true,false);
 
-        int slot = leafNode.findSlotByKey(key,kType);
+        int slot = leafNode.findSlotByKey(key,keyType.getClass());
         if(slot>0){
             throw new IllegalParamException();
         }
@@ -98,18 +109,18 @@ public abstract class BPlusTree<K extends DataHolder<K> ,V extends DataHolder<V>
         leafNode.add(slot,key,value,kType,vType);
 
         Node<K,V> newNode = leafNode.isFull()?leafNode.split():null;
+        save(leafNode);
+
         while (!stackSlots.isEmpty()){
             slot = stackSlots.pop();
             InternalNode<K,V> stackInternalNode = stackNodes.pop();
             if(newNode!=null){
-                save(newNode);
                 K splitShiftKeyLeft = newNode.splitShiftKeyLeft();
+                save(newNode);
                 stackInternalNode.add(slot,splitShiftKeyLeft,newNode.getId(),kType);
             }
             newNode = stackInternalNode.isFull()?stackInternalNode.split():null;
-        }
-        if(newNode!=null){
-            save(newNode);
+            save(stackInternalNode);
         }
 
         return newNode;
@@ -188,7 +199,7 @@ public abstract class BPlusTree<K extends DataHolder<K> ,V extends DataHolder<V>
     //
     //        InternalNode internalNode = findParentNode(key);
     //        if(!internalNode.isFull()){
-    //            //remove old add new 2 leaf refresh internalNode key and childs
+    //            //remove old add new 2 leaf refresh internalNode key and children
     //            int oldInternalNodeKeyIndex = internalNode.findSlotByKey(oldLeafNodeOnInternalNodeKey);
     //            if(oldInternalNodeKeyIndex<0){
     //                throw new IllegalParamException();
@@ -196,14 +207,14 @@ public abstract class BPlusTree<K extends DataHolder<K> ,V extends DataHolder<V>
     //
     //
     //            internalNode.getKeys()[oldInternalNodeKeyIndex] = leafNode.getKeys()[0];
-    //            internalNode.getChilds()[oldInternalNodeKeyIndex+1] = leafNode.getId();
+    //            internalNode.getChildren()[oldInternalNodeKeyIndex+1] = leafNode.getId();
     //
     //
     //            internalNode.setKeys(ArrayUtils.insertSorted(internalNode.getKeys(),internalNode.getAllocated().get(),
     //                newLeafNode.getKeys()[0],oldInternalNodeKeyIndex+1,kType));
     //
-    //            internalNode.setChilds(Arrays.asList(ArrayUtils.insertSorted(
-    //                IntStream.of( internalNode.getChilds() ).boxed().toArray( Integer[]::new ),
+    //            internalNode.setChildren(Arrays.asList(ArrayUtils.insertSorted(
+    //                IntStream.of( internalNode.getChildren() ).boxed().toArray( Integer[]::new ),
     //                internalNode.getAllocated().get()+1
     //                ,newLeafNode.getId(),oldInternalNodeKeyIndex+2,Integer.class)
     //            ).stream().mapToInt(Integer::intValue).toArray());
@@ -278,7 +289,7 @@ public abstract class BPlusTree<K extends DataHolder<K> ,V extends DataHolder<V>
             leafNode.getKeys()).filter(Objects::nonNull).collect(Collectors.toList()).toArray()
             ,key
         );
-        if(slot==-1){
+        if(slot<0){
             return null;
         }
         return leafNode.getValues()[slot];
@@ -303,7 +314,7 @@ public abstract class BPlusTree<K extends DataHolder<K> ,V extends DataHolder<V>
                 stackSlots.push(slotId);
                 stackNodes.push(internalNode);
             }
-            int childId = internalNode.getChilds()[slotId];
+            int childId = internalNode.getChildren()[slotId];
             node = getNodeById(childId);
             if(logTrance){
                 logger.log(node);
@@ -322,7 +333,7 @@ public abstract class BPlusTree<K extends DataHolder<K> ,V extends DataHolder<V>
             int slot =node.findSlotByKey(key,kType);
             find = slot>0;
             int slotId = slot>0 ? slot+1:-slot;
-            int childId = internalNode.getChilds()[slotId];
+            int childId = internalNode.getChildren()[slotId];
             parent =node;
             node = getNodeById(childId);
         }

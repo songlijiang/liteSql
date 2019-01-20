@@ -1,5 +1,6 @@
 package com.wolf.store.bplustree;
 
+import com.wolf.exception.IllegalParamException;
 import com.wolf.store.index.DataHolder;
 import java.lang.reflect.Array;
 import java.nio.ByteBuffer;
@@ -59,7 +60,10 @@ public abstract class Node<K extends DataHolder<K>,V extends DataHolder<V>> {
 
     private void serializeBase(ByteBuffer byteBuffer){
 
-
-
     }
+
+
+
+
+
 }

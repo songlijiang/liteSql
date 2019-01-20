@@ -14,13 +14,13 @@ public class MemoryBPlusTreeTest {
 
     @Test
     public void test_init(){
-        MemoryBPlusTree bPlusTree = new MemoryBPlusTree(IntIndex.class,IntIndex.class,10);
+        MemoryBPlusTree bPlusTree = new MemoryBPlusTree(new IntIndex(0),new IntIndex(0),10);
         bPlusTree.init();
-        for (int i = 0; i <10000000 ; i++) {
+        for (int i = 0; i <100000 ; i++) {
 
             bPlusTree.add(new IntIndex(i),new IntIndex(i*2));
         }
-        System.out.println(bPlusTree.findByKey(new IntIndex(95911)));
+        System.out.println(bPlusTree.findByKey(new IntIndex(5999)));
     }
     @Test
     public void test_binary(){

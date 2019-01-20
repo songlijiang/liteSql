@@ -5,6 +5,9 @@ package com.wolf.exception;
  */
 public class IndexException extends RuntimeException{
 
+    public IndexException(){
+        super();
+    }
 
     public IndexException(String message){
         super(message);

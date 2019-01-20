@@ -19,7 +19,7 @@ public class MemoryBPlusTree<K extends DataHolder<K>,V extends DataHolder<V>> ex
     private  AtomicInteger allocated;
 
 
-    public MemoryBPlusTree(Class kType, Class vType, int degree) {
+    public MemoryBPlusTree(DataHolder kType, DataHolder vType, int degree) {
         super(kType, vType, degree);
         allocated=new AtomicInteger(0);
     }
@@ -34,9 +34,9 @@ public class MemoryBPlusTree<K extends DataHolder<K>,V extends DataHolder<V>> ex
     }
 
     @Override public void save(Node<K, V> node) {
-        if(store.containsKey(node.getId())){
-            throw  new IllegalParamException();
-        }
+        //if(store.containsKey(node.getId())){
+        //    throw  new IllegalParamException();
+        //}
         store.put(node.getId(),node);
     }
 }
